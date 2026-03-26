@@ -5,7 +5,29 @@
 
     page.init = function () {
         $(window).scrollTop(0);
+
+        $('input[type="radio"]').on('change', function () {
+            var $radio = $(this);
+            var $formCheck = $radio.closest('.form-check');
+            var $questionBlock = $radio.closest('[data-question-answers]');
+            var $result = $formCheck.find('.answer-result');
+            var isAccepted = $radio.attr('data-is-accepted') === 'true';
+
+            $questionBlock.find('.answer-result')
+                .text('')
+                .removeClass('text-success text-danger');
+
+            if (isAccepted) {
+                $result.text('Correct!').addClass('text-success');
+            } else {
+                $result.text('Wrong answer').addClass('text-danger');
+            }
+        });
     };
+
+    $(function () {
+        page.init();
+    });
 
 </script>
 <h2 class="text-primary">Stack Overflow Questions</h2>
@@ -28,16 +50,15 @@
                 {
                     <div class="list-group-item ps-4 py-3">
                         <div class="form-check mb-0">
-                            <input class="form-check-input"
-                                   type="radio"
-                                   name="guess_question_@question.QuestionID"
-                                   id="q@(question.QuestionID)_a@(answer.AnswerID)"
-                                   value="@answer.AnswerID"
-                                   data-is-accepted="@(answer.AcceptedAnswer ? "true" : "false")" />
-                            <label class="form-check-label small w-100" for="q@(question.QuestionID)_a@(answer.AnswerID)">
+                            <label class="form-check-label small w-100">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="guess_question_@question.QuestionID"
+                                       value="@answer.AnswerID"
+                                       data-is-accepted="@(answer.AcceptedAnswer ? "true" : "false")" >
                                 @answer.Body
+                                <span class="answer-result d-block mt-2 small"></span>
                             </label>
-                            <span class="answer-result d-block mt-2 small" aria-live="polite"></span>
                         </div>
                     </div>
                 }
