@@ -1,5 +1,13 @@
 @model StackOverflowProject.Controllers.StackoverflowController.ViewModel
 
+<script>
+    var page = {};
+
+    page.init = function () {
+        $(window).scrollTop(0);
+    };
+
+</script>
 <h2 class="text-primary">Stack Overflow Questions</h2>
 <h6>Choose the right answer to the question</h6>
 
@@ -15,7 +23,7 @@
                     </div>
                 </div>
             </div>
-            <div class="list-group list-group-flush">
+            <div class="list-group list-group-flush" data-question-answers="@question.QuestionID">
                 @foreach (var answer in question.Answers)
                 {
                     <div class="list-group-item ps-4 py-3">
@@ -23,11 +31,13 @@
                             <input class="form-check-input"
                                    type="radio"
                                    name="guess_question_@question.QuestionID"
-                                   id="questionAnswerID"
-                                   value="@answer.AnswerID" />
-                            <label class="form-check-label small w-100" for="questionAnswerID">
+                                   id="q@(question.QuestionID)_a@(answer.AnswerID)"
+                                   value="@answer.AnswerID"
+                                   data-is-accepted="@(answer.AcceptedAnswer ? "true" : "false")" />
+                            <label class="form-check-label small w-100" for="q@(question.QuestionID)_a@(answer.AnswerID)">
                                 @answer.Body
                             </label>
+                            <span class="answer-result d-block mt-2 small" aria-live="polite"></span>
                         </div>
                     </div>
                 }
@@ -35,3 +45,5 @@
         </li>
     }
 </ul>
+
+
