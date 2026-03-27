@@ -61,12 +61,13 @@ public class StackoverflowController : Controller
 
             foreach (var question in questions)
             {
-                question.Answers = allAnswers
+                var answersForQuestion = allAnswers
                     .Where(a => a.QuestionID == question.QuestionID)
                     .ToList();
-            }
 
-            // Keep only questions that actually have fetched answer choices.
+                ShuffleInPlace(answersForQuestion);
+                question.Answers = answersForQuestion;
+            }
             questions = questions
                 .Where(q => q.Answers.Count > 0)
                 .ToList();
@@ -79,6 +80,16 @@ public class StackoverflowController : Controller
         };
 
         return View(model);
+    }
+
+    //randomizing the lit of questions so the first answer is not always the right one.
+    private static void ShuffleInPlace(List<Answer> answers)
+    {
+        for (int i = answers.Count - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            (answers[i], answers[j]) = (answers[j], answers[i]);
+        }
     }
 }
 
