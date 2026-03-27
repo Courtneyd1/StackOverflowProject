@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using StackOverflowProject.Models;
+using System.Text.Json;
 
 namespace StackOverflowProject.Controllers;
 
@@ -11,47 +12,36 @@ public class StackoverflowController : Controller
         public List<Answer> Answers { get; set; } = [];
     }
 
-    public IActionResult Index()
+    public IActionResult Index([FromServices] IHttpClientFactory factory)
     {
-        var questions = new List<Question>
-    {
-        new Question
-        {
-            QuestionID = 1,
-            Title = "I am a question.",
-            AnswerCount = 3,
-        },
-        new Question
-        {
-            QuestionID = 2,
-            Title = "How do you write a string.",
-            AnswerCount = 3,
-        }
-    };
+        var client = factory.CreateClient("StackExchange");
 
-        var answers = new List<Answer>
-    {
-        new Answer { AnswerID = 1, QuestionID = 1, Body = "I am an answer.", AcceptedAnswer = true },
-        new Answer { AnswerID = 2, QuestionID = 1, Body = "i am the wrong answer", AcceptedAnswer = false },
-        new Answer { AnswerID = 3, QuestionID = 1, Body = "also the wrong answer", AcceptedAnswer = false },
+        string url = "2.3/search/advanced" +
+                     "?order=desc" +
+                     "&sort=activity" +
+                     "&accepted=true" +
+                     "&answers=2" +
+                     "&site=stackoverflow";
 
-        new Answer { AnswerID = 4, QuestionID = 2, Body = "var string = something between quotes", AcceptedAnswer = true },
-        new Answer { AnswerID = 5, QuestionID = 2, Body = "string = string", AcceptedAnswer = false },
-        new Answer { AnswerID = 6, QuestionID = 2, Body = "string", AcceptedAnswer = false },
-    };
+        var json = client.GetStringAsync(url).Result;
 
-        foreach (var question in questions)
+        var options = new JsonSerializerOptions
         {
-            question.Answers = answers
-                .Where(a => a.QuestionID == question.QuestionID)
-                .ToList();
-        }
+            PropertyNameCaseInsensitive = true
+        };
+
+        var apiResponse = JsonSerializer.Deserialize<StackExchangeResponse<Question>>(json, options);
 
         var model = new ViewModel
         {
-            Questions = questions
+            Questions = apiResponse?.Items ?? []
         };
 
         return View(model);
     }
+}
+
+public class StackExchangeResponse<T>
+{
+    public List<T> Items { get; set; } = [];
 }

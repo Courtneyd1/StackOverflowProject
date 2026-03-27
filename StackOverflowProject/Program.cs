@@ -2,11 +2,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddHttpClient();
+
+builder.Services.AddHttpClient("StackExchange", client =>
+{
+    client.BaseAddress = new Uri("https://api.stackexchange.com/");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd(
+        "StackOverflowProject/1.0 (+https://stackoverflow.com; development)");
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
