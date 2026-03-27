@@ -16,25 +16,66 @@ public class StackoverflowController : Controller
     {
         var client = factory.CreateClient("StackExchange");
 
-        string url = "2.3/search/advanced" +
-                     "?order=desc" +
-                     "&sort=activity" +
-                     "&accepted=true" +
-                     "&answers=2" +
-                     "&site=stackoverflow";
-
-        var json = client.GetStringAsync(url).Result;
-
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
 
-        var apiResponse = JsonSerializer.Deserialize<StackExchangeResponse<Question>>(json, options);
+        string questionsUrl = "2.3/search/advanced" +
+                              "?order=desc" +
+                              "&sort=activity" +
+                              "&accepted=true" +
+                              "&answers=2" +
+                              "&pagesize=25" +
+                              "&site=stackoverflow";
+
+        var questionsJson = client.GetStringAsync(questionsUrl).Result;
+
+        var questionResponse = JsonSerializer.Deserialize<StackExchangeResponse<Question>>(questionsJson, options);
+
+        var questions = questionResponse?.Items ?? [];
+
+        questions = questions
+            .Where(q => q.AnswerCount > 1)
+            .ToList();
+
+        var allAnswers = new List<Answer>();
+        var questionIds = questions.Select(q => q.QuestionID).ToList();
+
+        if (questionIds.Count > 0)
+        {
+            string ids = string.Join(";", questionIds);
+
+            string answersUrl = $"2.3/questions/{ids}/answers" +
+                                "?order=desc" +
+                                "&sort=votes" +
+                                "&pagesize=100" +
+                                "&site=stackoverflow" +
+                                "&filter=withbody";
+
+            var answersJson = client.GetStringAsync(answersUrl).Result;
+
+            var answerResponse = JsonSerializer.Deserialize<StackExchangeResponse<Answer>>(answersJson, options);
+
+            allAnswers = answerResponse?.Items ?? [];
+
+            foreach (var question in questions)
+            {
+                question.Answers = allAnswers
+                    .Where(a => a.QuestionID == question.QuestionID)
+                    .ToList();
+            }
+
+            // Keep only questions that actually have fetched answer choices.
+            questions = questions
+                .Where(q => q.Answers.Count > 0)
+                .ToList();
+        }
 
         var model = new ViewModel
         {
-            Questions = apiResponse?.Items ?? []
+            Questions = questions,
+            Answers = allAnswers
         };
 
         return View(model);

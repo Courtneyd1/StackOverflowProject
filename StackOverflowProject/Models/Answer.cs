@@ -13,6 +13,7 @@ namespace StackOverflowProject.Models
         [JsonPropertyName("body")]
         public string Body { get; set; } = string.Empty;
 
+        //not sure if i want to add a score or not- just something fun to think about.
         [JsonPropertyName("score")]
         public int Score { get; set; }
     }

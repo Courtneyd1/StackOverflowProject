@@ -1,4 +1,27 @@
 @model StackOverflowProject.Controllers.StackoverflowController.ViewModel
+@using System.Net
+@using System.Text.RegularExpressions
+
+@functions {
+    public static string BuildPreview(string htmlBody, int maxLength = 320)
+    {
+        if (string.IsNullOrWhiteSpace(htmlBody))
+        {
+            return string.Empty;
+        }
+
+        var withoutTags = Regex.Replace(htmlBody, "<.*?>", " ");
+        var decoded = WebUtility.HtmlDecode(withoutTags);
+        var normalized = Regex.Replace(decoded, "\\s+", " ").Trim();
+
+        if (normalized.Length <= maxLength)
+        {
+            return normalized;
+        }
+
+        return normalized[..maxLength].TrimEnd() + "...";
+    }
+}
 
 <script>
     var page = {};
@@ -18,7 +41,7 @@
                 .removeClass('text-success text-danger');
 
             if (isAccepted) {
-                $result.text('Correct!').addClass('text-success');
+                $result.text('Accepted Answer').addClass('text-success');
             } else {
                 $result.text('Wrong answer!').addClass('text-danger');
             }
@@ -49,13 +72,13 @@
                         <div class="form-check mb-0">
                             <input class="form-check-input"
                                    type="radio"
+                                   id="answer_@answer.AnswerID"
                                    name="guess_question_@question.QuestionID"
                                    value="@answer.AnswerID"
-                                   data-is-accepted="@(answer.AnswerID == question.AcceptedAnswerID ? "true" : "false")"
-                                   id="answer_@answer.AnswerID" />
+                                   data-is-accepted="@(answer.AnswerID == question.AcceptedAnswerID ? "true" : "false")">
 
                             <label class="form-check-label small w-100" for="answer_@answer.AnswerID">
-                                @Html.Raw(answer.Body)
+                                @BuildPreview(answer.Body)
                             </label>
 
                             <span class="answer-result d-block mt-2 small"></span>
