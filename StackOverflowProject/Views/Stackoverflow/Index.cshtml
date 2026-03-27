@@ -20,7 +20,7 @@
             if (isAccepted) {
                 $result.text('Correct!').addClass('text-success');
             } else {
-                $result.text('Wrong answer').addClass('text-danger');
+                $result.text('Wrong answer!').addClass('text-danger');
             }
         });
     };
@@ -28,37 +28,37 @@
     $(function () {
         page.init();
     });
-
 </script>
+
 <h2 class="text-primary">Stack Overflow Questions</h2>
 <h6>Choose the right answer to the question</h6>
 
 <ul class="list-group">
     @foreach (var question in Model.Questions)
     {
-        <li class="list-group-item p-0">
+        <li class="list-group-item p-0 mb-3">
             <div class="p-3 border-bottom bg-light">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                        <div class="fw-semibold">@question.Title</div>
-                        <div class="text-muted">@question.AnswerCount answers</div>
-                    </div>
-                </div>
+                <div class="fw-semibold">@question.Title</div>
+                <div class="text-muted">@question.AnswerCount answers</div>
             </div>
+
             <div class="list-group list-group-flush" data-question-answers="@question.QuestionID">
                 @foreach (var answer in question.Answers)
                 {
                     <div class="list-group-item ps-4 py-3">
                         <div class="form-check mb-0">
-                            <label class="form-check-label small w-100">
-                                <input class="form-check-input"
-                                       type="radio"
-                                       name="guess_question_@question.QuestionID"
-                                       value="@answer.AnswerID"
-                                       data-is-accepted="@(answer.AcceptedAnswer ? "true" : "false")" >
-                                @answer.Body
-                                <span class="answer-result d-block mt-2 small"></span>
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="guess_question_@question.QuestionID"
+                                   value="@answer.AnswerID"
+                                   data-is-accepted="@(answer.AnswerID == question.AcceptedAnswerID ? "true" : "false")"
+                                   id="answer_@answer.AnswerID" />
+
+                            <label class="form-check-label small w-100" for="answer_@answer.AnswerID">
+                                @Html.Raw(answer.Body)
                             </label>
+
+                            <span class="answer-result d-block mt-2 small"></span>
                         </div>
                     </div>
                 }
@@ -66,5 +66,3 @@
         </li>
     }
 </ul>
-
-
