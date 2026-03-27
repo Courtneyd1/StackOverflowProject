@@ -3,7 +3,7 @@
 @using System.Text.RegularExpressions
 
 @functions {
-    public static string BuildPreview(string htmlBody, int maxLength = 320)
+    public static string BuildPreview(string htmlBody, int maxLength = 220)
     {
         if (string.IsNullOrWhiteSpace(htmlBody))
         {
@@ -41,11 +41,31 @@
                 .removeClass('text-success text-danger');
 
             if (isAccepted) {
-                $result.text('Accepted Answer').addClass('text-success');
+                $result.text('Correct!').addClass('text-success');
             } else {
-                $result.text('Wrong answer!').addClass('text-danger');
+                $result.text('Wrong answer').addClass('text-danger');
             }
         });
+    };
+
+    page.toggleArrow = function (id) {
+        var card = document.getElementById(id);
+        var button = card.querySelector('.btn');
+        var arrowIcon = card.querySelector('.arrow-icon i');
+        var isCollapsed = button.getAttribute('aria-expanded') === 'true';
+
+        document.querySelectorAll('.arrow-icon i').forEach(function (icon) {
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        });
+
+        if (isCollapsed) {
+            arrowIcon.classList.remove('fa-chevron-up');
+            arrowIcon.classList.add('fa-chevron-down');
+        } else {
+            arrowIcon.classList.remove('fa-chevron-down');
+            arrowIcon.classList.add('fa-chevron-up');
+        }
     };
 
     $(function () {
@@ -53,39 +73,60 @@
     });
 </script>
 
-<h2 class="text-primary">Stack Overflow Questions</h2>
+<h2 class="text-primary">StackOverflow Questions</h2>
 <h6>Choose the right answer to the question</h6>
 
-<ul class="list-group">
-    @foreach (var question in Model.Questions)
+<div class="accordion" id="questionsAccordion">
+    @for (int i = 0; i < Model.Questions.Count; i++)
     {
-        <li class="list-group-item p-0 mb-3">
-            <div class="p-3 border-bottom bg-light">
-                <div class="fw-semibold">@question.Title</div>
-                <div class="text-muted">@question.AnswerCount answers</div>
-            </div>
+        var question = Model.Questions[i];
+        var cardId = $"questionCard_{question.QuestionID}";
+        var collapseId = $"collapse_{question.QuestionID}";
 
-            <div class="list-group list-group-flush" data-question-answers="@question.QuestionID">
-                @foreach (var answer in question.Answers)
-                {
-                    <div class="list-group-item ps-4 py-3">
-                        <div class="form-check mb-0">
-                            <input class="form-check-input"
-                                   type="radio"
-                                   id="answer_@answer.AnswerID"
-                                   name="guess_question_@question.QuestionID"
-                                   value="@answer.AnswerID"
-                                   data-is-accepted="@(answer.AnswerID == question.AcceptedAnswerID ? "true" : "false")">
+        <div class="card mb-3" id="@cardId">
+            <div class="card-header p-0">
+                <button class="btn w-100 text-start d-flex justify-content-between align-items-center p-3"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#@collapseId"
+                        aria-expanded="false"
+                        aria-controls="@collapseId"
+                        onclick="page.toggleArrow('@cardId')">
 
-                            <label class="form-check-label small w-100" for="answer_@answer.AnswerID">
-                                @BuildPreview(answer.Body)
-                            </label>
-
-                            <span class="answer-result d-block mt-2 small"></span>
-                        </div>
+                    <div>
+                        <div class="fw-semibold">@question.Title</div>
+                        <div class="text-muted small">@question.AnswerCount answers</div>
                     </div>
-                }
+
+                    <span class="arrow-icon ms-3">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </span>
+                </button>
             </div>
-        </li>
+
+            <div id="@collapseId" class="collapse" data-bs-parent="#questionsAccordion">
+                <div class="card-body p-0" data-question-answers="@question.QuestionID">
+                    @foreach (var answer in question.Answers)
+                    {
+                        <div class="border-top ps-4 py-3">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="guess_question_@question.QuestionID"
+                                       value="@answer.AnswerID"
+                                       data-is-accepted="@(answer.AnswerID == question.AcceptedAnswerID ? "true" : "false")"
+                                       id="answer_@answer.AnswerID" />
+
+                                <label class="form-check-label small w-100" for="answer_@answer.AnswerID">
+                                    @BuildPreview(answer.Body, 220)
+                                </label>
+
+                                <span class="answer-result d-block mt-2 small"></span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     }
-</ul>
+</div>
